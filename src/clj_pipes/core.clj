@@ -1,26 +1,11 @@
 (ns clj-pipes.core
   (:require ;;[clojure.core.typed :as t :refer [inst check-ns doseq> dotimes> ann-form Seqable]]
             ;;[clojure.core.typed.async :as ta :refer [chan> go> Chan sliding-buffer> dropping-buffer>]]
-            [clojure.core.async :as async :refer [chan >! <! go]]))
+            [clojure.core.async :as async :refer [chan >! <! go]]
+            [clojure.core.async.lab :refer [spool]]))
 
 ;;(t/typed-deps clojure.core.typed.async)
 ;;(t/ann create-producer [(Fn [ -> Any]) -> (Fn [ -> (Chan Any)])])
-
-(defn spool
-  "Take a sequence and puts each value on a channel and returns the channel.
-   If no channel is provided, an unbuffered channel is created. If the
-   sequence ends, the channel is closed."
-  ([s c]
-     (async/go
-      (loop [[f & r] s]
-        (if f
-          (do
-            (async/>! c f)
-            (recur r))
-          (async/close! c))))
-     c)
-  ([s]
-     (spool s (async/chan))))
 
 
 (defn create-producer
