@@ -1,7 +1,7 @@
 (ns clj-pipes.core
   (:require ;;[clojure.core.typed :as t :refer [inst check-ns doseq> dotimes> ann-form Seqable]]
             ;;[clojure.core.typed.async :as ta :refer [chan> go> Chan sliding-buffer> dropping-buffer>]]
-            [clojure.core.async :as async :refer [chan >! <! go]]
+            [clojure.core.async :as async :refer [chan >! <! go close!]]
             [clojure.core.async.lab :refer [spool]]))
 
 ;;(t/typed-deps clojure.core.typed.async)
@@ -20,12 +20,12 @@
 The supplied function must take a single value and return a single value"
   [pipe-fn]
   (fn [channel]
-    (let [c (async/chan)]
+    (let [c (chan)]
       (async/go (loop []
-                  (if-let [v (async/<! channel)]
-                    (do (async/>! c (pipe-fn v))
+                  (if-let [v (<! channel)]
+                    (do (>! c (pipe-fn v))
                         (recur))))
-                (async/close! c))
+                (close! c))
       c)))
 
 
@@ -34,7 +34,7 @@ The supplied function must take a single value and return a single value"
   [consuming-fn]
   (fn [channel]
     (async/go-loop []
-      (if-let [v (async/<! channel)]
+      (if-let [v (<! channel)]
         (do (consuming-fn v)
             (recur))))
     nil))
